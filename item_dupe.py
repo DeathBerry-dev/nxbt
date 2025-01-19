@@ -301,8 +301,8 @@ if __name__ == "__main__":
     print(f"set date and time to {default_time}")
     input("Press ENTER to continue...")
     #PROGRAM STARTS HERE
-    #input_item = item_input()
-    input_item = seed["EXP_Candy_XL"]
+    input_item = item_input()
+    #input_item = seed["EXP_Candy_XL"]
     repeat = repeat_amount()
     for i in range(0, repeat):
         print(f"\nPrinting batch {i+1}")
