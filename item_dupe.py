@@ -9,9 +9,9 @@ DIALOG_SETUP = """
 0.1s
 L_STICK@-50+50 0.1s
 A 0.1s
-4s
+8s
 A 0.1s
-1s
+2s
 """#left on "I would like to print something"
 NAVIGATE_TIME = """
 1s
@@ -32,11 +32,9 @@ A 0.1s
 LOOP 3
     DPAD_DOWN 0.1s
     0.1s
-
 LOOP 2
     DPAD_DOWN 0.1s
 0.1s
-
 LOOP 2
     DPAD_DOWN 0.1s
     0.1s
@@ -58,55 +56,53 @@ A 0.1s
 """ #left in game for timer
 PRINT_ITEM = """
 15s
+0.1s
 X 0.1s
 1s
 A 0.1s
-7s
+40s
+B 0.1s
+2s
 A 0.1s
-20s
-A 0.1s
-1s
-A 0.1s
-1s
+10s
 LOOP 8
     B 0.1s
-    0.9s
+    1s
+10s
 """ #left looking at printer
 PRINT_ITEM_R = """
 15s
 R 0.1s
-1s
+0.1s
 X 0.1s
 1s
 A 0.1s
-7s
+40s
+B 0.1s
+2s
 A 0.1s
-20s
-A 0.1s
-1s
-A 0.1s
-1s
+10s
 LOOP 8
     B 0.1s
-    0.9s
+    1s
+10s
 """ #left looking at printer
 PRINT_ITEM_L = """
 15s
 L 0.1s
-1s
+0.1s
 X 0.1s
 1s
 A 0.1s
-7s
+40s
+B 0.1s
+2s
 A 0.1s
-20s
-A 0.1s
-1s
-A 0.1s
-1s
+10s
 LOOP 8
     B 0.1s
-    0.9s
+    1s
+10s
 """ #left looking at printer
 TURN_OFF = """
 1s
@@ -153,7 +149,7 @@ def mode_set(input_item, mode): #sets mode based on item selected
         raise ValueError
 def bonus_check(item): #selects what bonus is required based on item
     if item in balls:
-        return 12, 1, 2025, 23, 35, 8
+        return 24, 1, 2025, 13, 12, 9
     else:
         return 11, 1, 2025, 21, 59, 9
 def ball_list(): #set bonus select filter
@@ -176,7 +172,6 @@ def seed_name(): #creates list of names for items to input
     for name in seed:
         ref.append(name)
     return ref
-
 def time_change_setup(current_time, item): #changes date time settings
     print("changing time settings")
     date_change(current_time[0], item[0]) #day
@@ -209,16 +204,18 @@ def timer(item): #timer TM
     nx.press_buttons(controller_index, [Buttons.A], block=True)#start countdown
     start_flag = time.perf_counter()
     macro_id = nx.macro(controller_index, TIMING, block=False)
-    while True:
-        if time_check() >= timing:
-            nx.press_buttons(controller_index, [Buttons.A])
-            print(f"timer completed at {time_check():.6f}")
-            break
+    #while True:
+        #if (time.perf_counter() - start_flag) >= timing:
+            #nx.press_buttons(controller_index, [Buttons.A])
+            #print(f"timer completed at {(time.perf_counter() - start_flag):.6f}")
+            #break
+    time.sleep(timing - (time.perf_counter() - start_flag))
+    nx.press_buttons(controller_index, [Buttons.A])
     print("<Menu>")
 def update_current(item): #keeps track of current date time setting
     global current_time #going to change current 
-    print(time_check())
-    runtime = time.strftime("%M:%S", time.gmtime(time_check())) #time thats lapsed
+    print(time.perf_counter() - start_flag)
+    runtime = time.strftime("%M:%S", time.gmtime(time.perf_counter() - start_flag)) #time thats lapsed
     print(f"runtime was {runtime}s")
     runtime_parts = runtime.split(":") #split into min, sec
     print(f"{int(item[4])}+{int(runtime_parts[0])}")
@@ -272,37 +269,65 @@ def item_print(input_item, mode): #setup and print
     print_job(mode)
     return_default()
     update_current(item)
-def time_check():
-    return time.perf_counter() - start_flag
 
 if __name__ == "__main__":
-    #set_up
-    #Global Variables
+    #GLOBAL VARIABLES
     default_time = (1, 1, 2025, 0, 0, 0)
     current_time = default_time
     job_set = 5
     seed = generate_seeds()
     balls = ball_list()
-    delay = 1.0006
+    delay = 1.07
     #start_flag = 0
-    # Init NXBT
+    # INIT NXBT
     import nxbt
 
-    # Start the NXBT service
+    #START THE NXBT SYSTEM
     nx = nxbt.Nxbt()
 
-    # Create a Pro Controller and wait for it to connect
+    #CREATE A PRO CONTROLLER AND WAIT FOR CONNECTION
     controller_index = nx.create_controller(nxbt.PRO_CONTROLLER)
     nx.wait_for_connection(controller_index)
 
     print("Connected")
-    #player set up intructions
+    #PLAYER SET UP INTRUCTIONS
     print("Before continuing please make sure you have completed the following intructions")
     print("Open pokemon and print 1 item with job amount 5")
     print("Turn and talk to NPC and leave on 'I would like to print something'")
     print("Have date and time set to YY:MM:DD 24hour clock")
     print("leave cursor on year")
     print("WARNING: make sure there is no current bonus")
-    #Program Starts HERE
-    print_main()
+    macro_id = nx.macro(controller_index, NAVIGATE_TIME)
+    print(f"set date and time to {default_time}")
+    input("Press ENTER to continue...")
+    #PROGRAM STARTS HERE
+    #input_item = item_input()
+    input_item = seed["EXP_Candy_XL"]
+    repeat = repeat_amount()
+    for i in range(0, repeat):
+        print(f"\nPrinting batch {i+1}")
+        print("\nsetting up bonus")
+        #item_print(item, 1)
+        item = mode_set(input_item, 1)
+        time_change_setup(current_time[:-1], item[:-1])
+        timer(item[-1])
+        print_job(1)
+        return_default()
+        update_current(item)
+        print("\nprinting frist batch")
+        #item_print(item, 5)
+        item = mode_set(input_item, 5)
+        time_change_setup(current_time[:-1], item[:-1])
+        timer(item[-1])
+        print_job(5)
+        return_default()
+        update_current(item)
+        print("\nprinting last batch")
+        #item_print(item, 5)
+        item = mode_set(input_item, 5)
+        time_change_setup(current_time[:-1], item[:-1])
+        timer(item[-1])
+        print_job(5)
+        return_default()
+        update_current(item)
     macro_id = nx.macro(controller_index, TURN_OFF)
